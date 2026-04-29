@@ -31,27 +31,27 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <div className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex gap-6">
+      <div className="flex-1 container mx-auto px-4 py-12">
+        <div className="flex gap-8">
           {/* Admin Sidebar */}
-          <aside className="w-64 space-y-2">
+          <aside className="w-64 space-y-1">
             <Link href="/admin">
-              <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start">Dashboard</Button>
             </Link>
             <Link href="/admin/users">
-              <Button variant="ghost" className="w-full justify-start">Users</Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start">Users</Button>
             </Link>
             <Link href="/admin/draws">
-              <Button variant="ghost" className="w-full justify-start">Draws</Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start">Draws</Button>
             </Link>
             <Link href="/admin/charities">
-              <Button variant="ghost" className="w-full justify-start">Charities</Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start">Charities</Button>
             </Link>
             <Link href="/admin/winners">
-              <Button variant="ghost" className="w-full justify-start">Winners</Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start">Winners</Button>
             </Link>
             <Link href="/admin/analytics">
-              <Button variant="ghost" className="w-full justify-start">Analytics</Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start">Analytics</Button>
             </Link>
           </aside>
 

@@ -53,18 +53,18 @@ const plans = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted py-20">
+    <div className="min-h-screen bg-background py-24">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <h1 className="mb-4">Choose Your Plan</h1>
+          <p className="text-lg text-muted-foreground leading-relaxed">
             Join our community and start tracking your performance while supporting charities
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {plans.map((plan) => (
-            <Card key={plan.name} className="relative">
+            <Card key={plan.name} className="relative flex flex-col">
               {plan.badge && (
                 <Badge className="absolute -top-3 right-4" variant="success">
                   {plan.badge}
@@ -74,36 +74,36 @@ export default function PricingPage() {
                 <CardTitle>{plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 flex flex-col">
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">${plan.price}</span>
+                  <span className="text-4xl font-display font-bold">${plan.price}</span>
                   <span className="text-muted-foreground">/{plan.interval}</span>
                 </div>
 
                 {/* Credits Badge */}
-                <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200">
+                <div className="mb-6 p-4 rounded-lg bg-secondary border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Coins className="h-5 w-5 text-yellow-600" />
-                      <span className="font-semibold text-yellow-900">Credits Included</span>
+                      <Coins className="h-5 w-5" />
+                      <span className="font-semibold">Credits Included</span>
                     </div>
-                    <Badge variant="outline" className="bg-white">
+                    <Badge variant="outline">
                       {plan.credits.total} credits
                     </Badge>
                   </div>
-                  <p className="text-xs text-yellow-700 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     {plan.credits.monthly} per month
                     {plan.credits.bonus > 0 && ` + ${plan.credits.bonus} bonus on signup`}
                   </p>
                 </div>
 
-                <ul className="space-y-2 mb-6">
+                <ul className="space-y-3 mb-8 flex-1">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <li key={feature} className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-success shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span className="text-sm">{feature}</span>
+                      <span className="text-sm leading-relaxed">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -118,11 +118,11 @@ export default function PricingPage() {
           ))}
         </div>
 
-        <div className="mt-12 text-center space-y-2">
-          <p className="text-sm text-muted-foreground">
+        <div className="mt-16 text-center space-y-3 max-w-2xl mx-auto">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             10% of your subscription goes to charity. You can increase this amount in your dashboard.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Credits are used for score entries (1 credit) and draw participation (2 credits).
           </p>
         </div>

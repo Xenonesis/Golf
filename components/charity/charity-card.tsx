@@ -17,7 +17,7 @@ interface CharityCardProps {
 
 export function CharityCard({ charity, onSelect, selected }: CharityCardProps) {
   return (
-    <Card className={`hover:shadow-md transition-shadow ${selected ? 'border-primary border-2' : ''}`}>
+    <Card className={`transition-all duration-200 ${selected ? 'border-primary border-2 shadow-md' : 'hover:shadow-md'}`}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
@@ -30,7 +30,7 @@ export function CharityCard({ charity, onSelect, selected }: CharityCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
           {charity.description || 'No description available'}
         </p>
         {onSelect && (

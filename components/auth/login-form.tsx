@@ -28,7 +28,7 @@ export function LoginForm() {
         <CardDescription>Enter your credentials to access your account</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className="space-y-4">
+        <form action={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">Email</label>
             <Input id="email" name="email" type="email" required placeholder="you@example.com" />
@@ -38,7 +38,7 @@ export function LoginForm() {
             <Input id="password" name="password" type="password" required placeholder="••••••••" />
           </div>
           {error && (
-            <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md">
+            <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md border border-destructive/20">
               {error}
             </div>
           )}
@@ -47,7 +47,7 @@ export function LoginForm() {
           </Button>
           <p className="text-sm text-center text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/signup" className="text-primary hover:underline">
+            <Link href="/auth/signup" className="text-primary hover:underline font-medium">
               Sign up
             </Link>
           </p>

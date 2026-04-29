@@ -19,9 +19,9 @@ export default async function CharitiesPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Our Charities</h1>
-          <p className="text-xl text-muted-foreground">
+        <div className="mb-12 max-w-3xl">
+          <h1 className="mb-3">Our Charities</h1>
+          <p className="text-lg text-muted-foreground leading-relaxed">
             Support these amazing organizations through your subscription
           </p>
         </div>

@@ -4,23 +4,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-5xl font-bold tracking-tight mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+      <section className="container mx-auto px-4 py-24 md:py-32 text-center max-w-5xl">
+        <h1 className="mb-6 leading-tight">
           Golf Performance + Charity + Rewards
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
           Track your golf scores, support charities, and win monthly rewards. Join our community of passionate golfers making a difference.
         </p>
-        <div className="flex gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/auth/signup">
-            <Button size="lg" className="text-lg px-8">
+            <Button size="lg" className="text-base px-8">
               Get Started
             </Button>
           </Link>
           <Link href="/pricing">
-            <Button size="lg" variant="outline" className="text-lg px-8">
+            <Button size="lg" variant="outline" className="text-base px-8">
               View Plans
             </Button>
           </Link>
@@ -28,10 +28,10 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12">Why Join?</h2>
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          <Card>
+      <section className="container mx-auto px-4 py-20">
+        <h2 className="text-center mb-16">Why Join?</h2>
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <Card className="group">
             <CardHeader>
               <CardTitle>Track Performance</CardTitle>
               <CardDescription>Monitor your last 5 Stableford scores</CardDescription>
@@ -43,7 +43,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="group">
             <CardHeader>
               <CardTitle>Support Charities</CardTitle>
               <CardDescription>Choose where your contribution goes</CardDescription>
@@ -55,7 +55,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="group">
             <CardHeader>
               <CardTitle>Win Rewards</CardTitle>
               <CardDescription>Monthly draws with cash prizes</CardDescription>
@@ -70,17 +70,17 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-16 text-center">
-        <Card className="max-w-2xl mx-auto bg-primary text-primary-foreground">
+      <section className="container mx-auto px-4 py-20">
+        <Card className="max-w-2xl mx-auto bg-secondary border-none">
           <CardHeader>
             <CardTitle className="text-2xl">Ready to Start?</CardTitle>
-            <CardDescription className="text-primary-foreground/80">
+            <CardDescription>
               Join thousands of golfers already participating
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/auth/signup">
-              <Button size="lg" variant="secondary" className="text-lg">
+              <Button size="lg" className="text-base">
                 Create Free Account
               </Button>
             </Link>

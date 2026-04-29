@@ -49,10 +49,10 @@ export default async function DashboardPage() {
     .single() as { data: any | null }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Welcome, {profile?.full_name || 'Golfer'}!</h1>
+          <h1 className="mb-1">Welcome, {profile?.full_name || 'Golfer'}!</h1>
           <p className="text-muted-foreground">Manage your golf performance and rewards</p>
         </div>
       </div>
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
             <CardTitle className="text-lg">Scores Tracked</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{scores?.length || 0}/5</p>
+            <p className="text-3xl font-display font-bold">{scores?.length || 0}/5</p>
             <p className="text-sm text-muted-foreground">Last 5 Stableford scores</p>
           </CardContent>
         </Card>
@@ -100,12 +100,12 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Coins className="h-4 w-4 text-yellow-500" />
+              <Coins className="h-4 w-4" />
               Credits
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-3xl font-bold ${credits.currentBalance === 0 ? 'text-red-500' : credits.currentBalance < 5 ? 'text-yellow-500' : 'text-green-500'}`}>
+            <p className={`text-3xl font-display font-bold ${credits.currentBalance === 0 ? 'text-destructive' : credits.currentBalance < 5 ? 'text-yellow-600' : 'text-success'}`}>
               {credits.currentBalance}
             </p>
             <p className="text-sm text-muted-foreground">{credits.monthlyAllowance} monthly allowance</p>
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
       {/* Quick Actions */}
       <div className="grid md:grid-cols-3 gap-4">
         <Link href="/dashboard/scores">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="hover:shadow-md transition-all duration-200 cursor-pointer group">
             <CardHeader>
               <CardTitle>Add Score</CardTitle>
               <CardDescription>Enter your latest Stableford score</CardDescription>
@@ -148,10 +148,10 @@ export default async function DashboardPage() {
         </Link>
 
         <Link href="/dashboard/credits">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="hover:shadow-md transition-all duration-200 cursor-pointer group">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Coins className="h-5 w-5 text-yellow-500" />
+                <Coins className="h-5 w-5" />
                 Manage Credits
               </CardTitle>
               <CardDescription>View balance and transaction history</CardDescription>
@@ -160,7 +160,7 @@ export default async function DashboardPage() {
         </Link>
 
         <Link href="/dashboard/charity">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="hover:shadow-md transition-all duration-200 cursor-pointer group">
             <CardHeader>
               <CardTitle>Select Charity</CardTitle>
               <CardDescription>Choose where your contribution goes</CardDescription>
