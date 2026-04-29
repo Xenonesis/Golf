@@ -258,9 +258,12 @@ BEGIN
 
   IF score_count >= 5 THEN
     DELETE FROM public.golf_scores
-    WHERE user_id = NEW.user_id
-    ORDER BY play_date ASC
-    LIMIT 1;
+    WHERE id IN (
+      SELECT id FROM public.golf_scores
+      WHERE user_id = NEW.user_id
+      ORDER BY play_date ASC
+      LIMIT 1
+    );
   END IF;
 
   RETURN NEW;
