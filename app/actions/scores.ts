@@ -3,6 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { ScoreSchema } from '@/lib/validation'
+import { spendCredits } from '@/lib/credits'
+
+const SCORE_ENTRY_COST = 1 // 1 credit per score entry
 
 export async function addScore(formData: FormData) {
   const supabase = await createClient()
@@ -11,18 +14,6 @@ export async function addScore(formData: FormData) {
 
   if (!user) {
     return { error: 'Not authenticated' }
-  }
-
-  // Verify active subscription
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('status')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
-
-  if (!subscription) {
-    return { error: 'Active subscription required to add scores' }
   }
 
   const rawData = {
@@ -37,12 +28,38 @@ export async function addScore(formData: FormData) {
     return { error: 'Invalid input', details: result.error.flatten() }
   }
 
+  // Check and spend credits
+  const creditResult = await spendCredits(
+    user.id,
+    SCORE_ENTRY_COST,
+    `Golf score entry: ${result.data.score} at ${result.data.course_name}`,
+    undefined,
+    'golf_score'
+  )
+
+  if (!creditResult.success) {
+    return { error: creditResult.error }
+  }
+
   const { error } = await (supabase as any).from('golf_scores').insert({
     user_id: user.id,
     ...result.data,
   })
 
   if (error) {
+    // Refund credits if score insert fails
+    const { error: refundError } = await (supabase as any)
+      .from('user_credits')
+      .update({
+        current_balance: creditResult.balance! + SCORE_ENTRY_COST,
+        total_spent: ((await (supabase as any).from('user_credits').select('total_spent').eq('user_id', user.id).single()).data?.total_spent || 0) - SCORE_ENTRY_COST
+      })
+      .eq('user_id', user.id)
+
+    if (refundError) {
+      console.error('Failed to refund credits:', refundError)
+    }
+
     if (error.code === '23505') {
       return { error: 'A score for this date already exists' }
     }
@@ -51,7 +68,7 @@ export async function addScore(formData: FormData) {
 
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/scores')
-  return { success: true }
+  return { success: true, remainingCredits: creditResult.balance }
 }
 
 export async function deleteScore(scoreId: string) {

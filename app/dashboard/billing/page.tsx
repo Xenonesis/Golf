@@ -4,6 +4,9 @@ import { redirectToCustomerPortal } from '@/app/actions/subscription'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import type { Database } from '@/types/database.types'
+
+type Subscription = Database['public']['Tables']['subscriptions']['Row']
 
 export default async function BillingPage() {
   const supabase = await createClient()
@@ -19,7 +22,7 @@ export default async function BillingPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single()
+    .single() as { data: Subscription | null }
 
   return (
     <div className="space-y-6">

@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { NumberPicker } from '@/components/draws/number-picker'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import type { Database } from '@/types/database.types'
+
+type MonthlyDraw = Database['public']['Tables']['monthly_draws']['Row']
+type DrawParticipant = Database['public']['Tables']['draw_participants']['Row']
 
 export default async function DrawsPage() {
   const supabase = await createClient()
@@ -20,15 +24,17 @@ export default async function DrawsPage() {
     .from('monthly_draws')
     .select('*')
     .eq('draw_month', drawMonth)
-    .single()
+    .single() as { data: MonthlyDraw | null }
 
   // Check if user participated
-  const { data: participation } = await supabase
-    .from('draw_participants')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('draw_id', currentDraw?.id)
-    .single()
+  const { data: participation } = currentDraw
+    ? await supabase
+        .from('draw_participants')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('draw_id', currentDraw.id)
+        .single() as { data: DrawParticipant | null }
+    : { data: null }
 
   return (
     <div className="space-y-6">
@@ -56,7 +62,7 @@ export default async function DrawsPage() {
                 <p className="text-sm font-medium">Your numbers:</p>
                 <div className="flex gap-2 mt-2">
                   {participation.selected_numbers?.map((num) => (
-                    <Badge key={num} variant={currentDraw.winning_numbers.includes(num) ? 'success' : 'secondary'}>
+                    <Badge key={num} variant={currentDraw.winning_numbers?.includes(num) ? 'success' : 'secondary'}>
                       {num}
                     </Badge>
                   ))}

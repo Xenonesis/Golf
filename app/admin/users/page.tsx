@@ -1,6 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import type { Database } from '@/types/database.types'
+
+type Profile = Database['public']['Tables']['profiles']['Row'] & {
+  subscriptions?: Database['public']['Tables']['subscriptions']['Row'][] | null
+}
 
 export default async function UsersPage() {
   const supabase = await createClient()
@@ -14,7 +19,7 @@ export default async function UsersPage() {
         plan
       )
     `)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }) as { data: Profile[] | null }
 
   return (
     <div className="space-y-6">

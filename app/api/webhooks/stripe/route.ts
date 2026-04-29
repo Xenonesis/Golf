@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@supabase/supabase-js'
+import { addCredits } from '@/lib/credits'
 
 // Initialize Supabase with service role for webhook processing
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+
+// Map Stripe price IDs to monthly credit allocations
+const CREDIT_ALLOCATIONS: Record<string, number> = {
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY || 'price_monthly_test']: 20,
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY || 'price_yearly_test']: 30,
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -121,14 +128,16 @@ async function handleCheckoutSessionCompleted(session: any) {
 async function handleSubscriptionCreated(subscription: any) {
   const customerId = subscription.customer
 
-  // Find user by Stripe customer ID
-  const { data: customerRecord } = await supabaseAdmin
-    .from('customers')
+  // Find user by Stripe customer ID from subscriptions table
+  const { data: subscriptionRecord } = await supabaseAdmin
+    .from('subscriptions')
     .select('user_id')
     .eq('stripe_customer_id', customerId)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .single()
 
-  if (!customerRecord) {
+  if (!subscriptionRecord) {
     throw new Error(`Customer not found: ${customerId}`)
   }
 
@@ -138,31 +147,72 @@ async function handleSubscriptionCreated(subscription: any) {
     throw new Error('No price found in subscription')
   }
 
-  // Insert subscription record
-  await supabaseAdmin.from('subscriptions').insert({
-    user_id: customerRecord.user_id,
+  const monthlyCredits = CREDIT_ALLOCATIONS[priceId] || 20
+
+  // Check if this is user's first subscription
+  const { data: creditRecord } = await supabaseAdmin
+    .from('user_credits')
+    .select('*')
+    .eq('user_id', subscriptionRecord.user_id)
+    .single()
+
+  let bonusCredits = 0
+  let firstSubscriptionBonusApplied = false
+
+  if (creditRecord && !creditRecord.first_subscription_bonus_claimed) {
+    // Award 2X the monthly credits as one-time bonus
+    bonusCredits = monthlyCredits * 2
+    firstSubscriptionBonusApplied = true
+
+    // Add bonus credits
+    await addCredits(
+      subscriptionRecord.user_id,
+      bonusCredits,
+      'first_subscription_bonus',
+      `First subscription bonus - 2X ${monthlyCredits} credits`
+    )
+
+    // Update credit record to mark bonus as claimed
+    await supabaseAdmin
+      .from('user_credits')
+      .update({
+        first_subscription_bonus_claimed: true,
+        monthly_allowance: monthlyCredits
+      })
+      .eq('user_id', subscriptionRecord.user_id)
+  } else if (creditRecord) {
+    // Just update monthly allowance for existing subscribers
+    await supabaseAdmin
+      .from('user_credits')
+      .update({
+        monthly_allowance: monthlyCredits
+      })
+      .eq('user_id', subscriptionRecord.user_id)
+  }
+
+  // Upsert subscription record with credit info
+  await supabaseAdmin.from('subscriptions').upsert({
+    user_id: subscriptionRecord.user_id,
     stripe_subscription_id: subscription.id,
     stripe_price_id: priceId,
     status: subscription.status,
-    quantity: subscription.items.data[0]?.quantity || 1,
-    cancel_at_period_end: subscription.cancel_at_period_end,
+    monthly_credits: monthlyCredits,
+    first_subscription_bonus_applied: firstSubscriptionBonusApplied,
     current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
     current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-    trial_start: subscription.trial_start
-      ? new Date(subscription.trial_start * 1000).toISOString()
-      : null,
-    trial_end: subscription.trial_end
-      ? new Date(subscription.trial_end * 1000).toISOString()
-      : null,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    updated_at: new Date().toISOString(),
+  }, {
+    onConflict: 'stripe_subscription_id'
   })
 
-  console.log(`Subscription created: ${subscription.id} for user ${customerRecord.user_id}`)
+  console.log(`Subscription created: ${subscription.id} for user ${subscriptionRecord.user_id}, credits: ${monthlyCredits}, bonus: ${bonusCredits}`)
 }
 
 async function handleSubscriptionUpdated(subscription: any) {
   const { data: subscriptionRecord } = await supabaseAdmin
     .from('subscriptions')
-    .select('id')
+    .select('id, user_id')
     .eq('stripe_subscription_id', subscription.id)
     .single()
 
@@ -171,6 +221,7 @@ async function handleSubscriptionUpdated(subscription: any) {
   }
 
   const priceId = subscription.items.data[0]?.price.id
+  const monthlyCredits = priceId ? (CREDIT_ALLOCATIONS[priceId] || 20) : undefined
 
   // Update subscription record
   await supabaseAdmin
@@ -178,6 +229,7 @@ async function handleSubscriptionUpdated(subscription: any) {
     .update({
       status: subscription.status,
       stripe_price_id: priceId || undefined,
+      monthly_credits: monthlyCredits,
       cancel_at_period_end: subscription.cancel_at_period_end,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
@@ -191,7 +243,17 @@ async function handleSubscriptionUpdated(subscription: any) {
     })
     .eq('id', subscriptionRecord.id)
 
-  console.log(`Subscription updated: ${subscription.id}, status: ${subscription.status}`)
+  // Update credit allowance if plan changed
+  if (monthlyCredits && subscription.status === 'active') {
+    await supabaseAdmin
+      .from('user_credits')
+      .update({
+        monthly_allowance: monthlyCredits
+      })
+      .eq('user_id', subscriptionRecord.user_id)
+  }
+
+  console.log(`Subscription updated: ${subscription.id}, status: ${subscription.status}, credits: ${monthlyCredits}`)
 }
 
 async function handleSubscriptionDeleted(subscription: any) {

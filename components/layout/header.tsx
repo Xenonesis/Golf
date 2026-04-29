@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/actions/auth'
 import { createClient } from '@/lib/supabase/server'
+import type { Database } from '@/types/database.types'
+
+type Profile = Database['public']['Tables']['profiles']['Row']
 
 export async function Header() {
   const supabase = await createClient()
@@ -14,7 +17,7 @@ export async function Header() {
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .single() as { data: Profile | null }
     isAdmin = profile?.role === 'admin'
   }
 

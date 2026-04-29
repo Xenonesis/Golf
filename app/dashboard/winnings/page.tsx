@@ -2,6 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import type { Database } from '@/types/database.types'
+
+type WinnerVerification = Database['public']['Tables']['winner_verifications']['Row'] & {
+  draw_participants?: any
+}
 
 export default async function WinningsPage() {
   const supabase = await createClient()
@@ -22,7 +27,7 @@ export default async function WinningsPage() {
       )
     `)
     .eq('participant_id', '')
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }) as { data: WinnerVerification[] | null }
 
   return (
     <div className="space-y-6">

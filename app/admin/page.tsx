@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import type { Database } from '@/types/database.types'
+
+type MonthlyDraw = Database['public']['Tables']['monthly_draws']['Row']
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -23,7 +26,7 @@ export default async function AdminDashboard() {
     .from('monthly_draws')
     .select('*')
     .order('draw_month', { ascending: false })
-    .limit(1)
+    .limit(1) as { data: MonthlyDraw[] | null }
 
   return (
     <div className="space-y-6">
@@ -61,26 +64,29 @@ export default async function AdminDashboard() {
         </Card>
       </div>
 
-      {draws && draws.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Latest Draw</CardTitle>
-            <CardDescription>{new Date(draws[0].draw_month).toLocaleDateString()}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm capitalize">Status: {draws[0].status}</p>
-            {draws[0].winning_numbers && (
-              <div className="flex gap-2 mt-2">
-                {draws[0].winning_numbers.map((num: number) => (
-                  <span key={num} className="px-3 py-1 bg-primary text-primary-foreground rounded">
-                    {num}
-                  </span>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {draws && draws.length > 0 && (() => {
+        const latestDraw = draws[0]
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Latest Draw</CardTitle>
+              <CardDescription>{new Date(latestDraw.draw_month).toLocaleDateString()}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm capitalize">Status: {latestDraw.status}</p>
+              {latestDraw.winning_numbers && (
+                <div className="flex gap-2 mt-2">
+                  {latestDraw.winning_numbers.map((num: number) => (
+                    <span key={num} className="px-3 py-1 bg-primary text-primary-foreground rounded">
+                      {num}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })()}
     </div>
   )
 }

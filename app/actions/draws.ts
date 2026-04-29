@@ -3,6 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { DrawNumbersSchema } from '@/lib/validation'
+import { spendCredits } from '@/lib/credits'
+
+const DRAW_ENTRY_COST = 2 // 2 credits per draw entry
 
 export async function participateInDraw(numbers: number[]) {
   const supabase = await createClient()
@@ -59,6 +62,19 @@ export async function participateInDraw(numbers: number[]) {
     return { error: 'Already participated in this month\'s draw' }
   }
 
+  // Check and spend credits
+  const creditResult = await spendCredits(
+    user.id,
+    DRAW_ENTRY_COST,
+    `Draw participation: ${numbers.join(', ')}`,
+    undefined,
+    'draw_entry'
+  )
+
+  if (!creditResult.success) {
+    return { error: creditResult.error }
+  }
+
   // Insert participation
   const { error } = await (supabase as any)
     .from('draw_participants')
@@ -69,9 +85,18 @@ export async function participateInDraw(numbers: number[]) {
     })
 
   if (error) {
+    // Refund credits if participation insert fails
+    await (supabase as any)
+      .from('user_credits')
+      .update({
+        current_balance: creditResult.balance! + DRAW_ENTRY_COST,
+        total_spent: ((await (supabase as any).from('user_credits').select('total_spent').eq('user_id', user.id).single()).data?.total_spent || 0) - DRAW_ENTRY_COST
+      })
+      .eq('user_id', user.id)
+
     return { error: error.message }
   }
 
   revalidatePath('/dashboard/draws')
-  return { success: true }
+  return { success: true, remainingCredits: creditResult.balance }
 }

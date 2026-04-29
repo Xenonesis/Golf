@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { CharityCard } from '@/components/charity/charity-card'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import type { Database } from '@/types/database.types'
+
+type Charity = Database['public']['Tables']['charities']['Row']
 
 export default async function CharitiesPage() {
   const supabase = await createClient()
@@ -10,7 +13,7 @@ export default async function CharitiesPage() {
     .from('charities')
     .select('*')
     .eq('is_active', true)
-    .order('is_featured', { ascending: false })
+    .order('is_featured', { ascending: false }) as { data: Charity[] | null }
 
   return (
     <div className="min-h-screen flex flex-col">

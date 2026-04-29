@@ -12,7 +12,7 @@ export default async function ScoresPage() {
   }
 
   // Fetch last 5 scores
-  const { data: scores } = await supabase
+  const { data: scores } = await (supabase as any)
     .rpc('get_last_5_scores', { p_user_id: user.id })
 
   return (

@@ -15,6 +15,7 @@ CREATE TYPE public.draw_status AS ENUM ('draft', 'published', 'completed');
 CREATE TYPE public.winner_verification_status AS ENUM ('pending', 'approved', 'rejected', 'paid');
 CREATE TYPE public.charity_category AS ENUM ('education', 'health', 'environment', 'sports', 'community', 'other');
 CREATE TYPE public.draw_algorithm AS ENUM ('random', 'weighted');
+CREATE TYPE public.credit_transaction_type AS ENUM ('signup_bonus', 'monthly_grant', 'subscription_grant', 'first_subscription_bonus', 'spend', 'refund');
 
 -- ============================================
 -- PROFILES TABLE (extends auth.users)
@@ -44,10 +45,13 @@ CREATE TABLE public.subscriptions (
   status subscription_status NOT NULL DEFAULT 'pending',
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT UNIQUE,
+  stripe_price_id TEXT,
   current_period_start TIMESTAMPTZ,
   current_period_end TIMESTAMPTZ,
   cancel_at_period_end BOOLEAN DEFAULT FALSE,
   charity_contribution_percentage NUMERIC(5, 2) DEFAULT 10.00 CHECK (charity_contribution_percentage >= 10),
+  monthly_credits NUMERIC DEFAULT 0,
+  first_subscription_bonus_applied BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -195,6 +199,56 @@ CREATE INDEX idx_webhook_events_stripe_id ON public.webhook_events(stripe_event_
 CREATE INDEX idx_webhook_events_processed ON public.webhook_events(processed);
 
 -- ============================================
+-- USER CREDITS TABLE
+-- ============================================
+
+CREATE TABLE public.user_credits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  
+  -- Credit balance tracking
+  total_earned NUMERIC DEFAULT 0,
+  total_spent NUMERIC DEFAULT 0,
+  current_balance NUMERIC DEFAULT 0,
+  
+  -- Monthly allowance tracking
+  monthly_allowance NUMERIC DEFAULT 10,
+  last_monthly_grant TIMESTAMPTZ,
+  
+  -- One-time bonuses
+  signup_bonus_claimed BOOLEAN DEFAULT FALSE,
+  first_subscription_bonus_claimed BOOLEAN DEFAULT FALSE,
+  
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_credits_user_id ON public.user_credits(user_id);
+CREATE UNIQUE INDEX idx_user_credits_unique_user ON public.user_credits(user_id);
+
+-- ============================================
+-- CREDIT TRANSACTIONS TABLE
+-- ============================================
+
+CREATE TABLE public.credit_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  
+  amount NUMERIC NOT NULL,
+  type credit_transaction_type NOT NULL,
+  description TEXT,
+  
+  reference_id UUID,
+  reference_type TEXT,
+  
+  balance_after NUMERIC NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_credit_transactions_user_id ON public.credit_transactions(user_id);
+CREATE INDEX idx_credit_transactions_type ON public.credit_transactions(type);
+
+-- ============================================
 -- TRIGGER: Auto-create profile on user signup
 -- ============================================
 
@@ -219,6 +273,58 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
+
+-- ============================================
+-- TRIGGER: Auto-create credit record on user signup
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.handle_new_user_credits()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Create credit record with 50 signup bonus
+  INSERT INTO public.user_credits (
+    user_id, 
+    total_earned, 
+    current_balance, 
+    signup_bonus_claimed,
+    monthly_allowance
+  )
+  VALUES (
+    NEW.id,
+    50,
+    50,
+    TRUE,
+    10
+  );
+  
+  -- Log the signup bonus transaction
+  INSERT INTO public.credit_transactions (
+    user_id,
+    amount,
+    type,
+    description,
+    balance_after
+  )
+  VALUES (
+    NEW.id,
+    50,
+    'signup_bonus',
+    'Welcome bonus - 50 free credits',
+    50
+  );
+  
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_auth_user_created_credits
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user_credits();
 
 -- ============================================
 -- TRIGGER: Update updated_at timestamps
@@ -337,6 +443,52 @@ END;
 $$;
 
 -- ============================================
+-- FUNCTION: Grant monthly credits to all users
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.grant_monthly_credits()
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  user_record RECORD;
+BEGIN
+  FOR user_record IN SELECT * FROM public.user_credits LOOP
+    -- Check if it's been at least 30 days since last grant
+    IF user_record.last_monthly_grant IS NULL OR 
+       EXTRACT(DAY FROM NOW() - user_record.last_monthly_grant) >= 30 THEN
+      
+      -- Grant monthly allowance (10 credits)
+      UPDATE public.user_credits
+      SET 
+        total_earned = total_earned + 10,
+        current_balance = current_balance + 10,
+        last_monthly_grant = NOW()
+      WHERE id = user_record.id;
+      
+      -- Log transaction
+      INSERT INTO public.credit_transactions (
+        user_id,
+        amount,
+        type,
+        description,
+        balance_after
+      )
+      VALUES (
+        user_record.user_id,
+        10,
+        'monthly_grant',
+        'Monthly free credits',
+        user_record.current_balance + 10
+      );
+    END IF;
+  END LOOP;
+END;
+$$;
+
+-- ============================================
 -- ENABLE ROW LEVEL SECURITY
 -- ============================================
 
@@ -348,6 +500,8 @@ ALTER TABLE public.user_charity_selections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.monthly_draws ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.draw_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.winner_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_credits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.credit_transactions ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- RLS POLICIES
@@ -395,6 +549,14 @@ CREATE POLICY "Winners can view own verification" ON public.winner_verifications
 CREATE POLICY "Winners can upload proof" ON public.winner_verifications FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.draw_participants dp WHERE dp.id = participant_id AND dp.user_id = auth.uid()));
 CREATE POLICY "Winners can update own verification" ON public.winner_verifications FOR UPDATE USING (EXISTS (SELECT 1 FROM public.draw_participants dp WHERE dp.id = participant_id AND dp.user_id = auth.uid()));
 CREATE POLICY "Admins can review verifications" ON public.winner_verifications FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- User Credits
+CREATE POLICY "Users can view own credits" ON public.user_credits FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Service role can manage credits" ON public.user_credits FOR ALL USING (auth.jwt()->>'role' = 'service_role');
+
+-- Credit Transactions
+CREATE POLICY "Users can view own transactions" ON public.credit_transactions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Service role can manage transactions" ON public.credit_transactions FOR ALL USING (auth.jwt()->>'role' = 'service_role');
 
 -- ============================================
 -- SEED DATA: Sample Charities

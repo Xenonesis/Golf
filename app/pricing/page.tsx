@@ -2,6 +2,7 @@ import { createCheckoutSession } from '@/app/actions/subscription'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Coins } from 'lucide-react'
 
 // Sample pricing - in production, fetch from Stripe
 const plans = [
@@ -11,11 +12,19 @@ const plans = [
     price: 29.99,
     interval: 'month',
     priceId: 'price_monthly_test', // Replace with actual Stripe price ID
+    credits: {
+      monthly: 10,
+      bonus: 0,
+      total: 10,
+    },
     features: [
       'Track up to 5 scores',
       'Monthly draw participation',
       'Support your chosen charity',
       'Access to dashboard',
+      '10 credits per month',
+      '1 credit per score entry',
+      '2 credits per draw entry',
     ],
   },
   {
@@ -25,11 +34,19 @@ const plans = [
     interval: 'year',
     priceId: 'price_yearly_test', // Replace with actual Stripe price ID
     badge: 'Save 20%',
+    credits: {
+      monthly: 10,
+      bonus: 50,
+      total: 170, // 10 * 12 + 50 bonus
+    },
     features: [
       'Everything in Monthly',
       '20% discount',
       'Priority support',
       'Exclusive member events',
+      '10 credits per month (120/year)',
+      '50 bonus credits on signup',
+      'Total 170 credits first year',
     ],
   },
 ]
@@ -61,6 +78,23 @@ export default function PricingPage() {
                 <div className="mb-6">
                   <span className="text-4xl font-bold">${plan.price}</span>
                   <span className="text-muted-foreground">/{plan.interval}</span>
+                </div>
+
+                {/* Credits Badge */}
+                <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Coins className="h-5 w-5 text-yellow-600" />
+                      <span className="font-semibold text-yellow-900">Credits Included</span>
+                    </div>
+                    <Badge variant="outline" className="bg-white">
+                      {plan.credits.total} credits
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-yellow-700 mt-2">
+                    {plan.credits.monthly} per month
+                    {plan.credits.bonus > 0 && ` + ${plan.credits.bonus} bonus on signup`}
+                  </p>
                 </div>
 
                 <ul className="space-y-2 mb-6">

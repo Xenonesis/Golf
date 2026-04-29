@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { CharityCard } from '@/components/charity/charity-card'
 import { selectCharity } from '@/app/actions/charity'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import type { Database } from '@/types/database.types'
+
+type Charity = Database['public']['Tables']['charities']['Row']
+type UserCharitySelection = Database['public']['Tables']['user_charity_selections']['Row']
 
 export default async function CharityPage() {
   const supabase = await createClient()
@@ -17,14 +21,14 @@ export default async function CharityPage() {
     .from('charities')
     .select('*')
     .eq('is_active', true)
-    .order('is_featured', { ascending: false })
+    .order('is_featured', { ascending: false }) as { data: Charity[] | null }
 
   // Fetch user's current selection
   const { data: currentSelection } = await supabase
     .from('user_charity_selections')
     .select('charity_id')
     .eq('user_id', user.id)
-    .single()
+    .single() as { data: UserCharitySelection | null }
 
   async function handleSelect(charityId: string) {
     'use server'
