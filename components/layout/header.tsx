@@ -57,6 +57,9 @@ export async function Header() {
               <Link href="/dashboard/draws">
                 <Button variant="ghost" size="sm">Draws</Button>
               </Link>
+              <Link href="/dashboard/donations">
+                <Button variant="ghost" size="sm">Donations</Button>
+              </Link>
               {isAdmin && (
                 <Link href="/admin">
                   <Button variant="ghost" size="sm">Admin</Button>

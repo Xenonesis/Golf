@@ -55,6 +55,38 @@ export async function updateUserSubscription(userId: string, status: 'active' | 
   return { success: true }
 }
 
+export async function deleteUserScore(scoreId: string) {
+  const supabase = await createClient()
+
+  const { error } = await (supabase as any)
+    .from('golf_scores')
+    .delete()
+    .eq('id', scoreId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
+export async function updateUserScore(scoreId: string, updates: { score?: number; play_date?: string; course_name?: string; notes?: string }) {
+  const supabase = await createClient()
+
+  const { error } = await (supabase as any)
+    .from('golf_scores')
+    .update(updates)
+    .eq('id', scoreId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
 // ============================================
 // DRAW MANAGEMENT
 // ============================================

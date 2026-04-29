@@ -86,6 +86,10 @@ export async function POST(request: NextRequest) {
         await handleInvoicePaymentFailed(event.data.object)
         break
 
+      case 'payment_intent.succeeded':
+        await handlePaymentIntentSucceeded(event.data.object)
+        break
+
       default:
         console.log(`Unhandled event type: ${event.type}`)
     }
@@ -319,5 +323,38 @@ async function handleInvoicePaymentFailed(invoice: any) {
 
   if (subscriptionRecord) {
     console.log(`Payment failed for subscription: ${subscriptionId}, user: ${subscriptionRecord.user_id}`)
+  }
+}
+
+async function handlePaymentIntentSucceeded(paymentIntent: any) {
+  // Check if this is a donation payment (has charity_id in metadata)
+  const charityId = paymentIntent.metadata?.charity_id
+  
+  if (!charityId) {
+    return // Not a donation payment
+  }
+  
+  console.log(`Donation payment succeeded: ${paymentIntent.id} for charity ${charityId}`)
+  
+  // Update donation status to completed
+  const { data: donation } = await supabaseAdmin
+    .from('donations')
+    .select('id, amount, charity_id')
+    .eq('stripe_payment_intent_id', paymentIntent.id)
+    .single()
+  
+  if (donation) {
+    await supabaseAdmin
+      .from('donations')
+      .update({ status: 'completed' })
+      .eq('stripe_payment_intent_id', paymentIntent.id)
+    
+    // Increment charity's total_donations
+    await supabaseAdmin.rpc('increment_charity_donations', {
+      p_charity_id: donation.charity_id,
+      p_amount: donation.amount
+    })
+    
+    console.log(`Donation ${donation.id} marked as completed, charity donations updated`)
   }
 }
