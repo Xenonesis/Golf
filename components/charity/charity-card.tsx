@@ -36,7 +36,6 @@ export function CharityCard({ charity, onSelect, selected }: CharityCardProps) {
         {onSelect && (
           <Button
             type="submit"
-            onClick={() => onSelect(charity.id)}
             className="w-full"
             variant={selected ? 'default' : 'outline'}
             disabled={selected}
