@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/actions/auth'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/database.types'
+import { ThemeToggle } from './theme-toggle'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
@@ -29,6 +30,7 @@ export async function Header() {
         </Link>
 
         <nav className="flex items-center gap-2">
+          <ThemeToggle />
           {!user ? (
             <>
               <Link href="/pricing">
