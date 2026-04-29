@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { CharityCard } from '@/components/charity/charity-card'
 import { selectCharity, createCharity } from '@/app/actions/charity'
+import { updateContributionPercentage } from '@/app/actions/subscription'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,6 +10,7 @@ import type { Database } from '@/types/database.types'
 
 type Charity = Database['public']['Tables']['charities']['Row']
 type UserCharitySelection = Database['public']['Tables']['user_charity_selections']['Row']
+type Subscription = Database['public']['Tables']['subscriptions']['Row']
 
 export default async function CharityPage() {
   const supabase = await createClient()
@@ -31,6 +33,15 @@ export default async function CharityPage() {
     .select('charity_id')
     .eq('user_id', user.id)
     .single() as { data: UserCharitySelection | null }
+
+  // Fetch user's subscription to get contribution percentage
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('charity_contribution_percentage')
+    .eq('user_id', user.id)
+    .single() as { data: Subscription | null }
+
+  const currentPercentage = subscription?.charity_contribution_percentage || 10
 
   async function handleSelect(charityId: string) {
     'use server'
@@ -67,6 +78,51 @@ export default async function CharityPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Contribution Percentage Selector */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Contribution Percentage</CardTitle>
+          <CardDescription>Adjust how much of your subscription goes to charity (10% - 50%)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={async (formData: FormData) => {
+            'use server'
+            const percentage = Number(formData.get('percentage'))
+            await updateContributionPercentage(percentage)
+          }} className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Input
+                type="number"
+                name="percentage"
+                min="10"
+                max="50"
+                step="5"
+                defaultValue={currentPercentage}
+                className="w-32"
+              />
+              <span className="text-lg font-semibold">%</span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {[10, 15, 20, 25, 30, 40, 50].map((pct) => (
+                <Button
+                  key={pct}
+                  type="submit"
+                  name="percentage"
+                  value={pct}
+                  variant={currentPercentage === pct ? 'default' : 'outline'}
+                  size="sm"
+                >
+                  {pct}%
+                </Button>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Current: <span className="font-semibold">{currentPercentage}%</span> of your subscription
+            </p>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Create New Charity Form */}
       <Card>

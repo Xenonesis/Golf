@@ -43,6 +43,36 @@ export default async function DrawsPage() {
         <p className="text-muted-foreground">Participate for a chance to win rewards</p>
       </div>
 
+      {/* Prize Pool Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Prize Pool Distribution</CardTitle>
+          <CardDescription>How the prize pool is shared among winners</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-secondary border text-center">
+              <div className="text-2xl font-bold mb-1">40%</div>
+              <div className="text-sm font-medium">5 Numbers Match</div>
+              <div className="text-xs text-muted-foreground mt-1">Jackpot Winner</div>
+            </div>
+            <div className="p-4 rounded-lg bg-secondary border text-center">
+              <div className="text-2xl font-bold mb-1">35%</div>
+              <div className="text-sm font-medium">4 Numbers Match</div>
+              <div className="text-xs text-muted-foreground mt-1">Second Prize</div>
+            </div>
+            <div className="p-4 rounded-lg bg-secondary border text-center">
+              <div className="text-2xl font-bold mb-1">25%</div>
+              <div className="text-sm font-medium">3 Numbers Match</div>
+              <div className="text-xs text-muted-foreground mt-1">Third Prize</div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-4 text-center">
+            If no winner matches all numbers, the jackpot rolls over to next month.
+          </p>
+        </CardContent>
+      </Card>
+
       {currentDraw?.status === 'published' && currentDraw.winning_numbers && (
         <Card>
           <CardHeader>

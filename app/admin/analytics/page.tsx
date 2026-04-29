@@ -4,28 +4,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default async function AnalyticsPage() {
   const supabase = await createClient()
 
-  // Get various stats
-  const { count: totalUsers } = await (supabase as any).from('profiles').select('*', { count: 'exact', head: true })
-  const { count: activeSubscriptions } = await (supabase as any).from('subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active')
-  const { count: totalScores } = await (supabase as any).from('golf_scores').select('*', { count: 'exact', head: true })
-  const { count: totalParticipants } = await (supabase as any).from('draw_participants').select('*', { count: 'exact', head: true })
-  const { count: totalWinners } = await (supabase as any).from('winner_verifications').select('*', { count: 'exact', head: true }).eq('status', 'approved')
+  // Parallel data fetching to avoid waterfall
+  const [
+    usersResult,
+    subscriptionsResult,
+    scoresResult,
+    participantsResult,
+    winnersResult,
+    drawsResult,
+    charitiesResult
+  ] = await Promise.all([
+    (supabase as any).from('profiles').select('*', { count: 'exact', head: true }),
+    (supabase as any).from('subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    (supabase as any).from('golf_scores').select('*', { count: 'exact', head: true }),
+    (supabase as any).from('draw_participants').select('*', { count: 'exact', head: true }),
+    (supabase as any).from('winner_verifications').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+    (supabase as any).from('monthly_draws').select('jackpot_amount, status').order('draw_month', { ascending: false }),
+    (supabase as any).from('charities').select('name, total_donations').eq('is_active', true)
+  ])
+
+  const totalUsers = usersResult.count || 0
+  const activeSubscriptions = subscriptionsResult.count || 0
+  const totalScores = scoresResult.count || 0
+  const totalParticipants = participantsResult.count || 0
+  const totalWinners = winnersResult.count || 0
 
   // Prize pool statistics
-  const { data: draws } = await (supabase as any)
-    .from('monthly_draws')
-    .select('jackpot_amount, status')
-    .order('draw_month', { ascending: false })
-  
+  const draws = drawsResult.data
   const totalPrizePool = draws?.reduce((sum: number, draw: any) => sum + (draw.jackpot_amount || 0), 0) || 0
   const publishedDraws = draws?.filter((d: any) => d.status === 'published' || d.status === 'completed').length || 0
 
   // Charity contribution stats
-  const { data: charities } = await (supabase as any)
-    .from('charities')
-    .select('name, total_donations')
-    .eq('is_active', true)
-  
+  const charities = charitiesResult.data
   const totalCharityDonations = charities?.reduce((sum: number, charity: any) => sum + (charity.total_donations || 0), 0) || 0
 
   return (

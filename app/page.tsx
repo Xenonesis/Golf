@@ -182,83 +182,59 @@ export default function Home() {
           <p className="text-muted-foreground mb-12 max-w-2xl mx-auto">
             Choose a plan that fits your game. All plans include charity contributions and entry to monthly draws.
           </p>
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
             <Card className="hover:shadow-lg transition-shadow duration-200">
               <CardHeader>
-                <Badge variant="secondary" className="w-fit mb-2">Starter</Badge>
-                <CardTitle className="text-3xl">$9<span className="text-base font-normal text-muted-foreground">/month</span></CardTitle>
-                <CardDescription>Perfect for casual golfers</CardDescription>
+                <Badge variant="secondary" className="w-fit mb-2">Monthly Plan</Badge>
+                <CardTitle className="text-3xl">$29.99<span className="text-base font-normal text-muted-foreground">/month</span></CardTitle>
+                <CardDescription>Perfect for regular golfers</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="text-sm space-y-2 text-left">
                   <li className="flex items-start gap-2">
                     <span className="text-success">✓</span>
-                    <span>Up to 5 score submissions/month</span>
+                    <span>Track up to 5 scores</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-success">✓</span>
-                    <span>10% to charity</span>
+                    <span>10% minimum to charity</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-success">✓</span>
-                    <span>Monthly draw entries</span>
+                    <span>Monthly draw participation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-success">✓</span>
+                    <span>10 credits per month</span>
                   </li>
                 </ul>
               </CardContent>
             </Card>
 
             <Card className="border-primary hover:shadow-lg transition-shadow duration-200 relative">
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Best Value</Badge>
               <CardHeader>
-                <Badge variant="secondary" className="w-fit mb-2">Pro</Badge>
-                <CardTitle className="text-3xl">$19<span className="text-base font-normal text-muted-foreground">/month</span></CardTitle>
-                <CardDescription>For serious golfers</CardDescription>
+                <Badge variant="secondary" className="w-fit mb-2">Yearly Plan</Badge>
+                <CardTitle className="text-3xl">$287.90<span className="text-base font-normal text-muted-foreground">/year</span></CardTitle>
+                <CardDescription>Save 20% for dedicated golfers</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="text-sm space-y-2 text-left">
                   <li className="flex items-start gap-2">
                     <span className="text-success">✓</span>
-                    <span>Unlimited score submissions</span>
+                    <span>Everything in Monthly plan</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-success">✓</span>
-                    <span>15% to charity</span>
+                    <span>20% discount ($57 savings)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-success">✓</span>
-                    <span>Priority draw entries</span>
+                    <span>Priority support</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-success">✓</span>
-                    <span>Advanced analytics</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow duration-200">
-              <CardHeader>
-                <Badge variant="secondary" className="w-fit mb-2">Elite</Badge>
-                <CardTitle className="text-3xl">$39<span className="text-base font-normal text-muted-foreground">/month</span></CardTitle>
-                <CardDescription>Maximum impact & rewards</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm space-y-2 text-left">
-                  <li className="flex items-start gap-2">
-                    <span className="text-success">✓</span>
-                    <span>Everything in Pro</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-success">✓</span>
-                    <span>25% to charity</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-success">✓</span>
-                    <span>Bonus draw entries</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-success">✓</span>
-                    <span>VIP support</span>
+                    <span>170 total credits (50 bonus)</span>
                   </li>
                 </ul>
               </CardContent>

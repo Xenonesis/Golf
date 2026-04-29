@@ -1,11 +1,17 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { deleteScore } from '@/app/actions/scores'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ScoreEditModal } from './score-edit-modal'
+
+// Dynamic import for modal - only loaded when user clicks Edit
+const ScoreEditModal = dynamic(
+  () => import('./score-edit-modal').then((mod) => ({ default: mod.ScoreEditModal })),
+  { loading: () => null }
+)
 
 interface Score {
   id: string

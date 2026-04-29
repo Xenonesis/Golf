@@ -4,9 +4,15 @@ import { Footer } from '@/components/layout/footer'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { DonationForm } from '@/components/charity/donation-form'
+import dynamic from 'next/dynamic'
 import { notFound } from 'next/navigation'
 import type { Database } from '@/types/database.types'
+
+// Dynamic import for donation form - only loaded when needed
+const DonationForm = dynamic(
+  () => import('@/components/charity/donation-form').then((mod) => ({ default: mod.DonationForm })),
+  { loading: () => null }
+)
 
 type Charity = Database['public']['Tables']['charities']['Row']
 

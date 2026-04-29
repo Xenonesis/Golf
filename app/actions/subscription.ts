@@ -101,3 +101,29 @@ export async function redirectToCustomerPortal() {
 
   redirect(session.url)
 }
+
+export async function updateContributionPercentage(percentage: number) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
+
+  // Validate percentage (minimum 10%, maximum 50%)
+  if (percentage < 10 || percentage > 50) {
+    throw new Error('Contribution percentage must be between 10% and 50%')
+  }
+
+  const { error } = await (supabase as any)
+    .from('subscriptions')
+    .update({ charity_contribution_percentage: percentage })
+    .eq('user_id', user.id)
+
+  if (error) {
+    throw new Error('Failed to update contribution percentage')
+  }
+
+  return { success: true }
+}

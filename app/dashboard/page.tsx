@@ -18,41 +18,49 @@ export default async function DashboardPage() {
     return null
   }
 
-  // Fetch profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single() as { data: Profile | null }
+  // Parallel data fetching to avoid waterfall
+  const [profileResult, subscriptionResult, credits, scoresResult, charitySelectionResult] = await Promise.all([
+    // Fetch profile
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single(),
 
-  // Fetch subscription status
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single() as { data: Subscription | null }
+    // Fetch subscription status
+    supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
 
-  // Fetch credit balance
-  const credits = await getUserCredits(user.id)
+    // Fetch credit balance
+    getUserCredits(user.id),
 
-  // Fetch last 5 scores
-  const { data: scores } = await (supabase as any)
-    .rpc('get_last_5_scores', { p_user_id: user.id })
+    // Fetch last 5 scores
+    (supabase as any)
+      .rpc('get_last_5_scores', { p_user_id: user.id }),
 
-  // Fetch charity selection
-  const { data: charitySelection } = await supabase
-    .from('user_charity_selections')
-    .select('*, charities(name, logo_url)')
-    .eq('user_id', user.id)
-    .single() as { data: any | null }
+    // Fetch charity selection
+    supabase
+      .from('user_charity_selections')
+      .select('*, charities(name, logo_url)')
+      .eq('user_id', user.id)
+      .single()
+  ])
+
+  const profileData = profileResult.data as Profile | null
+  const subscriptionData = subscriptionResult.data as Subscription | null
+  const scoresData = scoresResult.data
+  const charitySelectionData = charitySelectionResult.data as any
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="mb-1">Welcome, {profile?.full_name || 'Golfer'}!</h1>
+          <h1 className="mb-1">Welcome, {profileData?.full_name || 'Golfer'}!</h1>
           <p className="text-muted-foreground">Manage your golf performance and rewards</p>
         </div>
       </div>
@@ -64,14 +72,14 @@ export default async function DashboardPage() {
           <CardDescription>Your current plan and access level</CardDescription>
         </CardHeader>
         <CardContent>
-          {subscription ? (
+          {subscriptionData ? (
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium capitalize">{subscription.plan} Plan</p>
-                <p className="text-sm text-muted-foreground capitalize">Status: {subscription.status}</p>
+                <p className="font-medium capitalize">{subscriptionData.plan} Plan</p>
+                <p className="text-sm text-muted-foreground capitalize">Status: {subscriptionData.status}</p>
               </div>
-              <Badge variant={subscription.status === 'active' ? 'success' : 'secondary'}>
-                {subscription.status}
+              <Badge variant={subscriptionData.status === 'active' ? 'success' : 'secondary'}>
+                {subscriptionData.status}
               </Badge>
             </div>
           ) : (
@@ -92,7 +100,7 @@ export default async function DashboardPage() {
             <CardTitle className="text-lg">Scores Tracked</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-display font-bold">{scores?.length || 0}/5</p>
+            <p className="text-3xl font-display font-bold">{scoresData?.length || 0}/5</p>
             <p className="text-sm text-muted-foreground">Last 5 Stableford scores</p>
           </CardContent>
         </Card>
@@ -118,7 +126,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-lg font-medium">
-              {charitySelection?.charities?.name || 'Not selected'}
+              {charitySelectionData?.charities?.name || 'Not selected'}
             </p>
             <p className="text-sm text-muted-foreground">Your contribution partner</p>
           </CardContent>
