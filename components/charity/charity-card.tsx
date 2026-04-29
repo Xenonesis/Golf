@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,15 +20,17 @@ export function CharityCard({ charity, onSelect, selected }: CharityCardProps) {
   return (
     <Card className={`transition-all duration-200 ${selected ? 'border-primary border-2 shadow-md' : 'hover:shadow-md'}`}>
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle>{charity.name}</CardTitle>
-            <CardDescription className="capitalize">{charity.category}</CardDescription>
+        <Link href={`/charities/${charity.id}`} className="hover:text-primary transition-colors">
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>{charity.name}</CardTitle>
+              <CardDescription className="capitalize">{charity.category}</CardDescription>
+            </div>
+            {charity.is_featured && (
+              <Badge variant="secondary">Featured</Badge>
+            )}
           </div>
-          {charity.is_featured && (
-            <Badge variant="secondary">Featured</Badge>
-          )}
-        </div>
+        </Link>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground mb-4 leading-relaxed">

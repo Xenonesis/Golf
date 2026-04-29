@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Coins } from 'lucide-react'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 
 // Sample pricing - in production, fetch from Stripe
 const plans = [
@@ -53,7 +55,9 @@ const plans = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-background py-24">
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
+      <main className="flex-1 py-24">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <h1 className="mb-4">Choose Your Plan</h1>
@@ -127,6 +131,8 @@ export default function PricingPage() {
           </p>
         </div>
       </div>
+      </main>
+      <Footer />
     </div>
   )
 }

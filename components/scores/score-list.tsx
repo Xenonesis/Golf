@@ -5,12 +5,14 @@ import { deleteScore } from '@/app/actions/scores'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { ScoreEditModal } from './score-edit-modal'
 
 interface Score {
   id: string
   score: number
   play_date: string
   course_name: string | null
+  notes?: string | null
 }
 
 interface ScoreListProps {
@@ -19,11 +21,18 @@ interface ScoreListProps {
 
 export function ScoreList({ scores }: ScoreListProps) {
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [editingScore, setEditingScore] = useState<Score | null>(null)
 
   async function handleDelete(id: string) {
     setDeleting(id)
     await deleteScore(id)
     setDeleting(null)
+  }
+
+  function handleEditSuccess() {
+    setEditingScore(null)
+    // Refresh the page to show updated scores
+    window.location.reload()
   }
 
   if (!scores || scores.length === 0) {
@@ -65,23 +74,39 @@ export function ScoreList({ scores }: ScoreListProps) {
                   </p>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDelete(score.id)}
-                disabled={deleting === score.id}
-              >
-                {deleting === score.id ? 'Deleting...' : 'Delete'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingScore(score)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(score.id)}
+                  disabled={deleting === score.id}
+                >
+                  {deleting === score.id ? 'Deleting...' : 'Delete'}
+                </Button>
+              </div>
             </div>
           ))}
         </div>
         {scores.length >= 5 && (
-          <p className="text-sm text-muted-foreground mt-4 p-3 bg-yellow-50 rounded-md">
+          <p className="text-sm text-muted-foreground mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-md">
             Note: You&apos;ve reached the maximum of 5 scores. Adding a new score will replace the oldest one.
           </p>
         )}
       </CardContent>
+      {editingScore && (
+        <ScoreEditModal
+          score={editingScore}
+          onClose={() => setEditingScore(null)}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </Card>
   )
 }

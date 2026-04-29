@@ -68,7 +68,7 @@ export default async function DrawsPage() {
                   ))}
                 </div>
                 {participation.is_winner && (
-                  <p className="text-green-600 font-medium mt-2">🎉 You're a winner!</p>
+                  <p className="text-green-600 dark:text-green-400 font-medium mt-2">🎉 You're a winner!</p>
                 )}
               </div>
             )}

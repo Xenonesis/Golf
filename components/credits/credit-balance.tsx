@@ -24,9 +24,9 @@ export function CreditBalance({
   }
 
   const getBalanceBadge = (balance: number) => {
-    if (balance === 0) return 'bg-red-100 text-red-800 border-red-200'
-    if (balance < 5) return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-    return 'bg-green-100 text-green-800 border-green-200'
+    if (balance === 0) return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800'
+    if (balance < 5) return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800'
+    return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
   }
 
   // Calculate usage percentage
@@ -42,7 +42,7 @@ export function CreditBalance({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Current Balance - Prominent Display */}
-        <div className="rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border border-blue-200">
+        <div className="rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 p-4 border border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Available Credits</p>
@@ -70,19 +70,19 @@ export function CreditBalance({
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3 pt-2">
-          <div className="space-y-1 p-3 rounded-lg border bg-green-50/50">
+          <div className="space-y-1 p-3 rounded-lg border bg-green-50/50 dark:bg-green-950/20">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 text-green-500" />
               Total Earned
             </div>
-            <p className="text-xl font-bold text-green-600">{totalEarned}</p>
+            <p className="text-xl font-bold text-green-600 dark:text-green-400">{totalEarned}</p>
           </div>
-          <div className="space-y-1 p-3 rounded-lg border bg-red-50/50">
+          <div className="space-y-1 p-3 rounded-lg border bg-red-50/50 dark:bg-red-950/20">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <TrendingDown className="h-3 w-3 text-red-500" />
               Total Spent
             </div>
-            <p className="text-xl font-bold text-red-600">{totalSpent}</p>
+            <p className="text-xl font-bold text-red-600 dark:text-red-400">{totalSpent}</p>
           </div>
         </div>
 
@@ -93,7 +93,7 @@ export function CreditBalance({
               <span className="text-muted-foreground">Credit Usage</span>
               <span className="font-medium">{usagePercentage}%</span>
             </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300"
                 style={{ width: `${Math.min(usagePercentage, 100)}%` }}
@@ -104,17 +104,17 @@ export function CreditBalance({
 
         {/* Alerts and Tips */}
         {currentBalance === 0 && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 border border-red-200">
+          <div className="rounded-md bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800">
             <strong>No Credits:</strong> You're out of credits. Wait for next month's allowance or subscribe for more.
           </div>
         )}
         {currentBalance > 0 && currentBalance < 5 && (
-          <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 border border-yellow-200">
+          <div className="rounded-md bg-yellow-50 dark:bg-yellow-950/30 p-3 text-sm text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
             <strong>Low Balance Alert:</strong> You have {currentBalance} credits remaining. Each draw entry costs 2 credits.
           </div>
         )}
         {currentBalance >= 5 && currentBalance < 10 && (
-          <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800 border border-blue-200">
+          <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 p-3 text-sm text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
             <strong>Tip:</strong> Subscribe to get up to 30 credits per month plus a one-time bonus!
           </div>
         )}

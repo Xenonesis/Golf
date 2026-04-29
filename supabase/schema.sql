@@ -250,6 +250,34 @@ CREATE INDEX idx_credit_transactions_user_id ON public.credit_transactions(user_
 CREATE INDEX idx_credit_transactions_type ON public.credit_transactions(type);
 
 -- ============================================
+-- DONATIONS TABLE (Independent one-time donations)
+-- ============================================
+
+CREATE TABLE public.donations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  charity_id UUID NOT NULL REFERENCES public.charities(id) ON DELETE CASCADE,
+  
+  amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+  currency TEXT DEFAULT 'USD',
+  
+  stripe_payment_intent_id TEXT UNIQUE,
+  status TEXT DEFAULT 'pending', -- pending, completed, failed, refunded
+  
+  is_anonymous BOOLEAN DEFAULT FALSE,
+  donor_name TEXT,
+  donor_email TEXT,
+  message TEXT,
+  
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_donations_charity_id ON public.donations(charity_id);
+CREATE INDEX idx_donations_user_id ON public.donations(user_id);
+CREATE INDEX idx_donations_status ON public.donations(status);
+
+-- ============================================
 -- TRIGGER: Auto-create profile on user signup
 -- ============================================
 
@@ -444,6 +472,24 @@ END;
 $$;
 
 -- ============================================
+-- FUNCTION: Increment charity donations
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.increment_charity_donations(p_charity_id UUID, p_amount NUMERIC)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.charities
+  SET total_donations = total_donations + p_amount,
+      updated_at = NOW()
+  WHERE id = p_charity_id;
+END;
+$$;
+
+-- ============================================
 -- FUNCTION: Grant monthly credits to all users
 -- ============================================
 
@@ -503,6 +549,7 @@ ALTER TABLE public.draw_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.winner_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_credits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.credit_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.donations ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- RLS POLICIES
@@ -560,6 +607,13 @@ CREATE POLICY "Service role can manage credits" ON public.user_credits FOR ALL U
 -- Credit Transactions
 CREATE POLICY "Users can view own transactions" ON public.credit_transactions FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Service role can manage transactions" ON public.credit_transactions FOR ALL USING (auth.jwt()->>'role' = 'service_role');
+
+-- Donations
+CREATE POLICY "Everyone can view completed donations" ON public.donations FOR SELECT USING (status = 'completed');
+CREATE POLICY "Users can view own donations" ON public.donations FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Authenticated users can create donations" ON public.donations FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+CREATE POLICY "Admins can view all donations" ON public.donations FOR SELECT USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Service role can update donations" ON public.donations FOR UPDATE USING (auth.jwt()->>'role' = 'service_role');
 
 -- ============================================
 -- SEED DATA: Sample Charities

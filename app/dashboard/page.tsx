@@ -105,7 +105,7 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-3xl font-display font-bold ${credits.currentBalance === 0 ? 'text-destructive' : credits.currentBalance < 5 ? 'text-yellow-600' : 'text-success'}`}>
+            <p className={`text-3xl font-display font-bold ${credits.currentBalance === 0 ? 'text-destructive' : credits.currentBalance < 5 ? 'text-yellow-600 dark:text-yellow-400' : 'text-success'}`}>
               {credits.currentBalance}
             </p>
             <p className="text-sm text-muted-foreground">{credits.monthlyAllowance} monthly allowance</p>

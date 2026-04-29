@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { DrawConfigSchema } from '@/lib/validation'
+import { generateRandomWinningNumbers, generateWeightedWinningNumbers, calculatePrizeDistribution } from '@/lib/draw-algorithm'
+import { sendDrawResultsNotification, sendWinnerVerificationReminder } from '@/lib/notifications'
 
 // ============================================
 // USER MANAGEMENT
@@ -111,11 +113,24 @@ export async function simulateDraw(drawId: string): Promise<{ winningNumbers: nu
   let winningNumbers: number[]
   
   if ((draw as any).algorithm === 'weighted') {
-    // TODO: Implement weighted algorithm based on frequency
-    // For now, use random as fallback
-    winningNumbers = generateRandomNumbers()
+    // Get all participant numbers for weighted calculation
+    const { data: participants } = await supabase
+      .from('draw_participants')
+      .select('selected_numbers')
+      .eq('draw_id', drawId)
+    
+    const participantNumbers = participants?.map((p: any) => p.selected_numbers || []) || []
+    
+    if (participantNumbers.length > 0) {
+      // Use weighted algorithm that favors less common numbers
+      winningNumbers = generateWeightedWinningNumbers(participantNumbers)
+    } else {
+      // Fallback to random if no participants
+      winningNumbers = generateRandomWinningNumbers()
+    }
   } else {
-    winningNumbers = generateRandomNumbers()
+    // Pure random algorithm
+    winningNumbers = generateRandomWinningNumbers()
   }
 
   // Get all participants for this draw
@@ -193,13 +208,30 @@ async function determineWinners(drawId: string, winningNumbers: number[]) {
   // Get draw info for prize calculation
   const { data: draw } = await (supabase as any)
     .from('monthly_draws')
-    .select('jackpot_amount')
+    .select('jackpot_amount, rollover_from')
     .eq('id', drawId)
     .single()
 
-  const jackpotAmount = (draw as any)?.jackpot_amount || 0
+  let jackpotAmount = (draw as any)?.jackpot_amount || 0
+
+  // Add rollover from previous draw if exists
+  if ((draw as any)?.rollover_from) {
+    const { data: previousDraw } = await (supabase as any)
+      .from('monthly_draws')
+      .select('jackpot_amount')
+      .eq('id', (draw as any).rollover_from)
+      .single()
+    
+    if (previousDraw) {
+      // Add 40% of previous draw's jackpot (the rollover amount)
+      jackpotAmount += (previousDraw as any).jackpot_amount * 0.4
+    }
+  }
 
   // Calculate matches for each participant
+  const winnersByTier = { tier5: 0, tier4: 0, tier3: 0 }
+  const winnerParticipants: any[] = []
+
   for (const participant of participants) {
     const selectedNumbers = (participant as any).selected_numbers || []
     const matchedCount = selectedNumbers.filter((num: number) => 
@@ -208,45 +240,95 @@ async function determineWinners(drawId: string, winningNumbers: number[]) {
 
     let isWinner = false
     let matchType = 0
-    let prizeAmount = 0
 
     if (matchedCount === 5) {
       isWinner = true
       matchType = 5
-      // 40% of jackpot for 5-match
-      prizeAmount = jackpotAmount * 0.4
+      winnersByTier.tier5++
     } else if (matchedCount === 4) {
       isWinner = true
       matchType = 4
-      // 35% of jackpot for 4-match
-      prizeAmount = jackpotAmount * 0.35
+      winnersByTier.tier4++
     } else if (matchedCount === 3) {
       isWinner = true
       matchType = 3
-      // 25% of jackpot for 3-match
-      prizeAmount = jackpotAmount * 0.25
+      winnersByTier.tier3++
     }
 
-    // Update participant record
+    if (isWinner) {
+      winnerParticipants.push({
+        ...participant,
+        matchedCount,
+        matchType
+      })
+    }
+
+    // Update participant record with match info (prize calculated below)
     await (supabase as any)
       .from('draw_participants')
       .update({
         matched_count: matchedCount,
         match_type: matchType,
         is_winner: isWinner,
-        prize_amount: isWinner ? prizeAmount : 0
+        prize_amount: 0 // Will be updated after prize calculation
       })
       .eq('id', (participant as any).id)
+  }
 
-    // Create winner verification record if winner
-    if (isWinner) {
-      await (supabase as any)
-        .from('winner_verifications')
-        .insert({
-          participant_id: (participant as any).id,
-          status: 'pending'
-        })
+  // Calculate prize distribution based on PRD rules
+  const prizeDistribution = calculatePrizeDistribution(jackpotAmount, winnersByTier)
+
+  // Update winners with their prize amounts
+  for (const winner of winnerParticipants) {
+    let prizeAmount = 0
+    
+    if (winner.matchType === 5) {
+      prizeAmount = prizeDistribution.tier5Prize
+    } else if (winner.matchType === 4) {
+      prizeAmount = prizeDistribution.tier4Prize
+    } else if (winner.matchType === 3) {
+      prizeAmount = prizeDistribution.tier3Prize
     }
+
+    // Update prize amount
+    await (supabase as any)
+      .from('draw_participants')
+      .update({
+        prize_amount: prizeAmount
+      })
+      .eq('id', winner.id)
+
+    // Create winner verification record
+    await (supabase as any)
+      .from('winner_verifications')
+      .insert({
+        participant_id: winner.id,
+        status: 'pending'
+      })
+
+    // Send verification reminder email
+    try {
+      await sendWinnerVerificationReminder(winner.id)
+    } catch (error) {
+      console.error(`Failed to send verification reminder to winner ${winner.id}:`, error)
+    }
+  }
+
+  // Update draw with rollover amount if no 5-match winner
+  if (winnersByTier.tier5 === 0 && prizeDistribution.rollover > 0) {
+    await (supabase as any)
+      .from('monthly_draws')
+      .update({
+        jackpot_amount: prizeDistribution.rollover
+      })
+      .eq('id', drawId)
+  }
+
+  // Send draw results notification to all participants
+  try {
+    await sendDrawResultsNotification(drawId)
+  } catch (error) {
+    console.error('Failed to send draw results notifications:', error)
   }
 }
 

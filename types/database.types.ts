@@ -300,6 +300,53 @@ export interface Database {
           updated_at?: string
         }
       }
+      donations: {
+        Row: {
+          id: string
+          user_id: string | null
+          charity_id: string
+          amount: number
+          currency: string | null
+          stripe_payment_intent_id: string | null
+          status: string | null
+          is_anonymous: boolean | null
+          donor_name: string | null
+          donor_email: string | null
+          message: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          charity_id: string
+          amount: number
+          currency?: string | null
+          stripe_payment_intent_id?: string | null
+          status?: string | null
+          is_anonymous?: boolean | null
+          donor_name?: string | null
+          donor_email?: string | null
+          message?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          charity_id?: string
+          amount?: number
+          currency?: string | null
+          stripe_payment_intent_id?: string | null
+          status?: string | null
+          is_anonymous?: boolean | null
+          donor_name?: string | null
+          donor_email?: string | null
+          message?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -319,6 +366,13 @@ export interface Database {
       calculate_draw_winners: {
         Args: {
           p_draw_id: string
+        }
+        Returns: void
+      }
+      increment_charity_donations: {
+        Args: {
+          p_charity_id: string
+          p_amount: number
         }
         Returns: void
       }

@@ -68,8 +68,8 @@ export default async function BillingPage() {
               )}
 
               {subscription.cancel_at_period_end && (
-                <div className="bg-yellow-50 p-4 rounded-md">
-                  <p className="text-sm text-yellow-800">
+                <div className="bg-yellow-50 dark:bg-yellow-950/30 p-4 rounded-md">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
                     Your subscription will cancel at the end of the current period
                   </p>
                 </div>

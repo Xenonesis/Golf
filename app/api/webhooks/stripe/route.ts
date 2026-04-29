@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@supabase/supabase-js'
 import { addCredits } from '@/lib/credits'
+import { sendSubscriptionConfirmation } from '@/lib/notifications'
 
 // Initialize Supabase with service role for webhook processing
 const supabaseAdmin = createClient(
@@ -205,6 +206,18 @@ async function handleSubscriptionCreated(subscription: any) {
   }, {
     onConflict: 'stripe_subscription_id'
   })
+
+  // Determine plan type from price ID
+  const plan = priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY ? 'yearly' : 'monthly'
+
+  // Send subscription confirmation email (only for new subscriptions)
+  if (firstSubscriptionBonusApplied) {
+    try {
+      await sendSubscriptionConfirmation(subscriptionRecord.user_id, plan)
+    } catch (error) {
+      console.error(`Failed to send subscription confirmation to user ${subscriptionRecord.user_id}:`, error)
+    }
+  }
 
   console.log(`Subscription created: ${subscription.id} for user ${subscriptionRecord.user_id}, credits: ${monthlyCredits}, bonus: ${bonusCredits}`)
 }

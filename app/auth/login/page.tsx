@@ -1,9 +1,13 @@
 import { LoginForm } from '@/components/auth/login-form'
+import { Header } from '@/components/layout/header'
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted px-4">
-      <LoginForm />
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 flex items-center justify-center bg-gradient-to-b from-background to-muted px-4">
+        <LoginForm />
+      </main>
     </div>
   )
 }

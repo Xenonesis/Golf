@@ -2,10 +2,13 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-24 md:py-32 text-center max-w-5xl">
         <h1 className="mb-6 leading-tight">
@@ -337,6 +340,7 @@ export default function Home() {
           </CardContent>
         </Card>
       </section>
+      <Footer />
     </div>
   )
 }

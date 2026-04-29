@@ -109,12 +109,12 @@ export function NumberPicker() {
         </div>
 
         {error && (
-          <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md mb-4 border border-red-200">
+          <div className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-md mb-4 border border-red-200 dark:border-red-800">
             {error}
           </div>
         )}
         {success && (
-          <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md mb-4 border border-green-200">
+          <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 p-3 rounded-md mb-4 border border-green-200 dark:border-green-800">
             Successfully entered the draw! Remaining credits: {currentBalance}
           </div>
         )}
