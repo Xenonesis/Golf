@@ -74,3 +74,37 @@ export async function signOut() {
   revalidatePath('/', 'layout')
   redirect('/')
 }
+
+export async function createAdminUser(email: string, password: string, fullName: string) {
+  const supabase = await createClient()
+
+  // Create the user in auth
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: fullName,
+    },
+  })
+
+  if (authError) {
+    return { error: authError.message }
+  }
+
+  // Update the profile to set role as admin
+  const { error: profileError } = await (supabase as any)
+    .from('profiles')
+    .update({ role: 'admin' })
+    .eq('id', authData.user.id)
+
+  if (profileError) {
+    return { error: 'User created but failed to set admin role: ' + profileError.message }
+  }
+
+  return { 
+    success: true, 
+    message: 'Admin user created successfully',
+    userId: authData.user.id
+  }
+}
