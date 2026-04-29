@@ -94,6 +94,7 @@ CREATE TABLE public.charities (
   is_featured BOOLEAN DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,
   total_donations NUMERIC(12, 2) DEFAULT 0,
+  created_by UUID REFERENCES public.profiles(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -527,7 +528,9 @@ CREATE POLICY "Admins can manage all scores" ON public.golf_scores FOR ALL USING
 
 -- Charities
 CREATE POLICY "Everyone can view active charities" ON public.charities FOR SELECT USING (is_active = true);
-CREATE POLICY "Admins can manage charities" ON public.charities FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Users can create charities" ON public.charities FOR INSERT WITH CHECK (auth.uid() = created_by OR auth.jwt()->>'role' = 'service_role');
+CREATE POLICY "Users can update own charities" ON public.charities FOR UPDATE USING (auth.uid() = created_by OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Admins can manage all charities" ON public.charities FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- User Charity Selections
 CREATE POLICY "Users can view own charity selections" ON public.user_charity_selections FOR SELECT USING (auth.uid() = user_id);

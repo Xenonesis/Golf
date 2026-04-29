@@ -22,46 +22,46 @@ export async function Header() {
   }
 
   return (
-    <header className="border-b bg-background">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <Link href="/" className="text-xl font-display font-bold tracking-tight hover:opacity-80 transition-opacity">
           Golf Rewards
         </Link>
 
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-2">
           {!user ? (
             <>
               <Link href="/pricing">
-                <Button variant="ghost">Pricing</Button>
+                <Button variant="ghost" size="sm">Pricing</Button>
               </Link>
               <Link href="/charities">
-                <Button variant="ghost">Charities</Button>
+                <Button variant="ghost" size="sm">Charities</Button>
               </Link>
               <Link href="/auth/login">
-                <Button variant="outline">Sign In</Button>
+                <Button variant="ghost" size="sm">Sign In</Button>
               </Link>
               <Link href="/auth/signup">
-                <Button>Get Started</Button>
+                <Button size="sm">Get Started</Button>
               </Link>
             </>
           ) : (
             <>
               <Link href="/dashboard">
-                <Button variant="ghost">Dashboard</Button>
+                <Button variant="ghost" size="sm">Dashboard</Button>
               </Link>
               <Link href="/dashboard/scores">
-                <Button variant="ghost">Scores</Button>
+                <Button variant="ghost" size="sm">Scores</Button>
               </Link>
               <Link href="/dashboard/draws">
-                <Button variant="ghost">Draws</Button>
+                <Button variant="ghost" size="sm">Draws</Button>
               </Link>
               {isAdmin && (
                 <Link href="/admin">
-                  <Button variant="ghost">Admin</Button>
+                  <Button variant="ghost" size="sm">Admin</Button>
                 </Link>
               )}
               <form action={signOut}>
-                <Button type="submit" variant="outline">Sign Out</Button>
+                <Button type="submit" variant="outline" size="sm">Sign Out</Button>
               </form>
             </>
           )}

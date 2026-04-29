@@ -134,6 +134,7 @@ export interface Database {
           is_featured: boolean | null
           is_active: boolean | null
           total_donations: number | null
+          created_by: string | null
           created_at: string
           updated_at: string
         }
@@ -147,6 +148,7 @@ export interface Database {
           is_featured?: boolean | null
           is_active?: boolean | null
           total_donations?: number | null
+          created_by?: string | null
           created_at?: string
           updated_at?: string
         }

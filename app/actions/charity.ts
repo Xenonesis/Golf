@@ -73,3 +73,50 @@ export async function updateContributionPercentage(percentage: number) {
   revalidatePath('/dashboard/charity')
   return { success: true }
 }
+
+export async function createCharity(data: {
+  name: string
+  description: string
+  category: string
+  website_url?: string
+}) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Validate input
+  if (!data.name || data.name.trim().length === 0) {
+    return { error: 'Charity name is required' }
+  }
+
+  if (!data.category) {
+    return { error: 'Category is required' }
+  }
+
+  // Insert new charity
+  const { data: charity, error } = await (supabase as any)
+    .from('charities')
+    .insert({
+      name: data.name.trim(),
+      description: data.description?.trim() || null,
+      category: data.category,
+      website_url: data.website_url?.trim() || null,
+      created_by: user.id,
+      is_active: true,
+      is_featured: false,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/dashboard/charity')
+  revalidatePath('/charities')
+  return { success: true, charity }
+}
