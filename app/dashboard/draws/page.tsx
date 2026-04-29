@@ -82,7 +82,7 @@ export default async function DrawsPage() {
         <Card>
           <CardHeader>
             <CardTitle>You're Entered!</CardTitle>
-            <CardDescription>Your numbers for this month's draw</CardDescription>
+            <CardDescription>Your numbers for this month&apos;s draw</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex gap-2">

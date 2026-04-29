@@ -78,7 +78,7 @@ export function ScoreList({ scores }: ScoreListProps) {
         </div>
         {scores.length >= 5 && (
           <p className="text-sm text-muted-foreground mt-4 p-3 bg-yellow-50 rounded-md">
-            Note: You've reached the maximum of 5 scores. Adding a new score will replace the oldest one.
+            Note: You&apos;ve reached the maximum of 5 scores. Adding a new score will replace the oldest one.
           </p>
         )}
       </CardContent>

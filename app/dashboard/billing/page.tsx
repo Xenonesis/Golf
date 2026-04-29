@@ -88,7 +88,7 @@ export default async function BillingPage() {
                 </Button>
               </form>
               <p className="text-xs text-muted-foreground">
-                Update payment method, change plan, or cancel through Stripe's secure portal
+                Update payment method, change plan, or cancel through Stripe&apos;s secure portal
               </p>
             </CardContent>
           </Card>

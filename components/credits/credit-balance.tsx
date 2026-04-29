@@ -67,7 +67,7 @@ export function CreditBalance({
         {/* Usage Info */}
         {currentBalance < 5 && (
           <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 border border-yellow-200">
-            <strong>Low Balance Alert:</strong> You're running low on credits. Consider upgrading your plan or wait for next month's allowance.
+            <strong>Low Balance Alert:</strong> You&apos;re running low on credits. Consider upgrading your plan or wait for next month&apos;s allowance.
           </div>
         )}
       </CardContent>

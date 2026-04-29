@@ -118,9 +118,12 @@ export default function PricingPage() {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center space-y-2">
           <p className="text-sm text-muted-foreground">
             10% of your subscription goes to charity. You can increase this amount in your dashboard.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Credits are used for score entries (1 credit) and draw participation (2 credits).
           </p>
         </div>
       </div>

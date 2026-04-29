@@ -39,7 +39,7 @@ export function NumberPicker() {
     <Card>
       <CardHeader>
         <CardTitle>Pick Your Numbers</CardTitle>
-        <CardDescription>Select 5 unique numbers (1-50) for this month's draw</CardDescription>
+        <CardDescription>Select 5 unique numbers (1-50) for this month&apos;s draw</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-10 gap-2 mb-6">

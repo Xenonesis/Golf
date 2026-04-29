@@ -46,7 +46,7 @@ export default async function CharityPage() {
         <Card>
           <CardHeader>
             <CardTitle>Current Selection</CardTitle>
-            <CardDescription>You're currently supporting this charity</CardDescription>
+            <CardDescription>You&apos;re currently supporting this charity</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-lg font-medium">
