@@ -62,6 +62,7 @@ export default async function CharityPage() {
             <CharityCard
               charity={charity}
               selected={currentSelection?.charity_id === charity.id}
+              onSelect={() => {}}
             />
           </form>
         ))}

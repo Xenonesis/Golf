@@ -1,15 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { participateInDraw } from '@/app/actions/draws'
+import { getCreditData } from '@/app/actions/credits'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Coins } from 'lucide-react'
 
 export function NumberPicker() {
   const [selected, setSelected] = useState<number[]>([])
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [pending, setPending] = useState(false)
+  const [currentBalance, setCurrentBalance] = useState<number>(0)
+  const DRAW_ENTRY_COST = 2
+
+  // Fetch current credit balance on mount
+  useEffect(() => {
+    const fetchCredits = async () => {
+      const creditData = await getCreditData()
+      if (creditData) {
+        setCurrentBalance(creditData.currentBalance)
+      }
+    }
+    fetchCredits()
+  }, [])
 
   function toggleNumber(num: number) {
     if (selected.includes(num)) {
@@ -30,6 +46,15 @@ export function NumberPicker() {
       setSuccess(true)
       setPending(false)
       setSelected([])
+      // Update balance after successful entry
+      if (result.remainingCredits !== undefined) {
+        setCurrentBalance(result.remainingCredits)
+      }
+      // Refresh credit data
+      const creditData = await getCreditData()
+      if (creditData) {
+        setCurrentBalance(creditData.currentBalance)
+      }
     }
   }
 
@@ -38,8 +63,16 @@ export function NumberPicker() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Pick Your Numbers</CardTitle>
-        <CardDescription>Select 5 unique numbers (1-50) for this month&apos;s draw</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Pick Your Numbers</CardTitle>
+            <CardDescription>Select 5 unique numbers (1-50) for this month's draw</CardDescription>
+          </div>
+          <Badge variant="outline" className="flex items-center gap-1 text-sm">
+            <Coins className="h-4 w-4 text-yellow-500" />
+            {currentBalance} credits
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-10 gap-2 mb-6">
@@ -62,29 +95,44 @@ export function NumberPicker() {
           ))}
         </div>
 
-        <div className="mb-4">
+        <div className="mb-4 space-y-2">
           <p className="text-sm font-medium mb-2">Selected: {selected.join(', ') || 'None'}</p>
           <p className="text-xs text-muted-foreground">{selected.length}/5 numbers picked</p>
+          {selected.length === 5 && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Entry cost:</span>
+              <Badge variant="secondary" className="font-semibold">
+                {DRAW_ENTRY_COST} credits
+              </Badge>
+            </div>
+          )}
         </div>
 
         {error && (
-          <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md mb-4">
+          <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md mb-4 border border-red-200">
             {error}
           </div>
         )}
         {success && (
-          <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md mb-4">
-            Successfully entered the draw!
+          <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md mb-4 border border-green-200">
+            Successfully entered the draw! Remaining credits: {currentBalance}
           </div>
         )}
 
         <Button
           onClick={handleSubmit}
-          disabled={selected.length !== 5 || pending}
+          disabled={selected.length !== 5 || pending || currentBalance < DRAW_ENTRY_COST}
           className="w-full"
         >
-          {pending ? 'Submitting...' : selected.length === 5 ? 'Enter Draw' : 'Pick 5 Numbers'}
+          {pending ? 'Submitting...' : 
+           currentBalance < DRAW_ENTRY_COST ? 'Insufficient Credits' :
+           selected.length === 5 ? 'Enter Draw' : 'Pick 5 Numbers'}
         </Button>
+        {currentBalance < DRAW_ENTRY_COST && (
+          <p className="text-xs text-center mt-2 text-muted-foreground">
+            You need {DRAW_ENTRY_COST} credits to enter. <a href="/dashboard/credits" className="text-primary hover:underline">View your credits</a>
+          </p>
+        )}
       </CardContent>
     </Card>
   )
